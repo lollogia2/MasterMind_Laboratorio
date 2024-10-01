@@ -1,1 +1,1 @@
-# MasterMind_Laboratorio
+# Laboratorio parte CLIPS
