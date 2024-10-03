@@ -5,6 +5,13 @@
 
 (deftemplate combination (multislot code (allowed-values blue green red yellow orange white black purple) (cardinality 4 4)))
 
+(deftemplate checkcombos 
+  (slot combination)
+  (slot right-placed (type INTEGER))
+  (slot miss-placed (type INTEGER))
+)
+
+
 (defrule human-player
   (status (step ?s) (mode human))
   =>
