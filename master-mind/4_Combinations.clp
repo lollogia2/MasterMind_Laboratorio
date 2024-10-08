@@ -1,5 +1,4 @@
 (deffacts combinations
-	(combination (code blue green red yellow))
 	(combination (code blue green red orange))
 	(combination (code blue green red white))
 	(combination (code blue green red black))
