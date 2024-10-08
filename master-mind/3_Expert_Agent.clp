@@ -31,8 +31,13 @@
   (pop-focus)
  )
 
+;  --------------
+;  --- FASE 1 ---
+;  --------------
+
+
 ;solo allo step 1, inizializzo tutti i campi di checkcombos
-(defrule initcobos
+(defrule initconbos
   (status (step 1) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 1)))
   ?combo <- (combination (code $?))
@@ -60,12 +65,13 @@
 ;  --- FASE 2 ---
 ;  --------------
 
+;controllo quali colori nelle combinazioni in checkcombos differiscono dai colori dalla mia possibile soluzione al turno precedente,
+;creo un missplaced per ogni colore fuori posto
 (defrule check-miss-placed
-  (status (step ?s&:(> ?s 1)) (mode computer))
+  (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
-  (status (step ?s))
-  ?combo<-(checkcombos (combination $?prima ?k $?dopo) )
-  (guess (step ?s&:(eq (- ?s 1) ?s1)) (g $?prima2 ?k $?dopo2))
+  ?combo <- (combination(code $?prima ?k $?dopo))
+  (guess (step ?s1&:(eq (- ?s 1) ?s1)) (g $?prima2 ?k $?dopo2))
   (test (neq (length$ $?prima2) (length$ $?prima)))
   (test (neq (length$ $?dopo2) (length$ $?dopo)))
 =>
@@ -73,43 +79,67 @@
   (assert (missplaced ?new ?combo))
 )
 
+;conto quanti missplaced ho creato associati ad una sequenza di colore di checkcombos
 (defrule count-missplaced
-  (status (step ?s&:(> ?s 1)) (mode computer))
+  (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
-  (status (step ?s))
   ?m <- (missplaced ? ?sol)
   ?checkcombos <- (checkcombos (combination ?sol) (miss-placed ?mp))
 =>
   (retract ?m)
   (bind ?new-mp (+ ?mp 1))
-  (modify ?a (miss-placed ?new-mp))  
+  (modify ?checkcombos (miss-placed ?new-mp)) 
 )
 
+;controllo quali colori nelle combinazioni in checkcombos fanno match con i colori soluzione al turno precedente, 
+;creo un rightplaced per ogni colore a posto
 (defrule check-right-placed
-  (status (step ?s))
-  (secret-code (code $?prima ?k $?dopo) )
-  (guess (step ?s) (g $?prima2  ?k $?dopo2))
+  (status (step ?s&:(> ?s 0)) (mode computer))
+  ?ph<- (phase (number ?n&:(= ?n 2)))
+  ?combo <- (combination(code $?prima ?k $?dopo))
+  (guess (step ?s1&:(eq (- ?s 1) ?s1)) (g $?prima2 ?k $?dopo2))
   (test (eq (length$ $?prima2) (length$ $?prima)))
   (test (eq (length$ $?dopo2) (length$ $?dopo)))   
 =>
   (bind ?new (gensym*))
-  (assert (rightplaced ?new))
+  (assert (rightplaced ?new ?combo))
 )
 
+;conto quanti rightplaced ho creato associati ad una sequenza di colore di checkcombos
 (defrule count-rightplaced
-  (status (step ?s))
-  ?a <- (answer (step ?s) (right-placed ?rp) (miss-placed ?mp))
-  ?r <- (rightplaced ?)
+  (status (step ?s&:(> ?s 0)) (mode computer))
+  ?ph<- (phase (number ?n&:(= ?n 2)))
+  ?checkcombos <- (checkcombos (combination ?sol) (right-placed ?rp))
+  ?r <- (rightplaced ? ?sol)
 =>
   (retract ?r)
   (bind ?new-rp (+ ?rp 1))
-  (modify ?a (right-placed ?new-rp))
+  (modify ?checkcombos (right-placed ?new-rp))
+)
+   
+(defrule end-feedback 
+  (status (step ?s&:(> ?s 0)) (mode computer))
+  ?ph<- (phase (number ?n&:(= ?n 2)))
+=>
+  (modify ?ph (number (+ ?n 1)))
+)
+
+;  --------------
+;  --- FASE 3 ---
+;  --------------
+
+;rimuovo 
+(defrule no-equal-feedback
+  (status (step ?s&:(> ?s 0)) (mode computer))
+  ?ph<- (phase (number ?n&:(= ?n 3)))
+=>
+
 )
 
 
-
-
-
+;  --------------
+;  --- FASE 0 ---
+;  --------------
  (defrule first-move
   (status (step 0) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 0)))
@@ -117,6 +147,16 @@
   (assert (guess (step 1) (g blue green red yellow)))
   (modify ?ph (number (+ ?n 1)))
   (pop-focus)
+ )
+
+
+  (defrule another-move
+  (status (step ?s&:(> ?s 0)) (mode computer))
+  ?ph<- (phase (number ?n&:(= ?n 0)))
+  =>
+  ****************************
+  (pop-focus)
+
  )
 
 (deffacts initial-facts
