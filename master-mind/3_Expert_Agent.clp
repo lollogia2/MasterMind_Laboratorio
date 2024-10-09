@@ -164,8 +164,11 @@
   (defrule another-move
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 0)))
+  ?combination <- (combination (code $?c))
   =>
-  ****************************
+  (assert (guess (step ?s) (g $?c)))
+  (retract ?combination)
+  (modify ?ph (number (+ ?n 1)))
   (pop-focus)
 
  )
