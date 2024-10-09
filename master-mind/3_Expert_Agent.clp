@@ -117,7 +117,7 @@
   (modify ?checkcombos (right-placed ?new-rp))
 )
    
-(defrule end-feedback 
+(defrule endph2
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
 =>
@@ -128,12 +128,23 @@
 ;  --- FASE 3 ---
 ;  --------------
 
-;rimuovo 
+;rimuovo le combinazioni che non darebbero la stessa soluzione della guess
 (defrule no-equal-feedback
+  (status (step ?s&:(> ?s 0)) (mode computer))
+  (phase (number ?n&:(= ?n 3)))
+  (answer (step ?s1&:(eq (- ?s 1) ?s1)) (right-placed ?right-answer) (miss-placed ?miss-answer))
+  ?checkcombos <- (checkcombos (combination ?comb)(right-placed ?right-comb)(miss-placed ?miss-comb))
+  (test (or (neq ?right-answer ?right-comb)(neq ?miss-answer ?miss-comb)))
+=>
+  (retract ?comb)
+  (retract ?checkcombos)
+)
+
+(defrule endph3
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 3)))
 =>
-
+  (modify ?ph (number (* ?n 0)))
 )
 
 
