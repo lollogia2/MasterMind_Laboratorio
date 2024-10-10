@@ -3,6 +3,12 @@
 ;  ---------------------------------------------
 (defmodule AGENT (import MAIN ?ALL) (import GAME ?ALL) (export ?ALL))
 
+
+
+;  --------------
+;  -- TEMPLATE --
+;  --------------
+
 ;template che contiene tutte le combinazioni possibili di colori
 (deftemplate combination (multislot code (allowed-values blue green red yellow orange white black purple) (cardinality 4 4)))
 
@@ -21,7 +27,9 @@
   (slot miss-placed (type INTEGER))
 )
 
-
+;  --------------
+;  -- UMANO -----
+;  --------------
 (defrule human-player
   (status (step ?s) (mode human))
   =>
@@ -54,7 +62,7 @@
   (modify ?chcombos (right-placed 0)(miss-placed 0))
 )
 
-;finsco la fase 1 e passo alla 2
+;termino la fase 1 e passo alla 2
 (defrule endph1 (declare (salience -10))
   ?ph<- (phase (number ?n&:(= ?n 1)))
 =>
@@ -79,7 +87,7 @@
   (assert (missplaced ?new ?combo))
 )
 
-;conto quanti missplaced ho creato associati ad una sequenza di colore di checkcombos
+;conto quanti missplaced ho creato, essi sono associati ad una sequenza di colore di checkcombos
 (defrule count-missplaced
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
@@ -105,7 +113,7 @@
   (assert (rightplaced ?new ?combo))
 )
 
-;conto quanti rightplaced ho creato associati ad una sequenza di colore di checkcombos
+;conto quanti rightplaced ho creato, essi sono associati ad una sequenza di colore di checkcombos
 (defrule count-rightplaced
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
@@ -116,7 +124,8 @@
   (bind ?new-rp (+ ?rp 1))
   (modify ?checkcombos (right-placed ?new-rp))
 )
-   
+
+;termino la fase 2 e passo alla 3
 (defrule endph2
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
@@ -128,7 +137,7 @@
 ;  --- FASE 3 ---
 ;  --------------
 
-;rimuovo le combinazioni che non darebbero la stessa soluzione della guess
+;rimuovo le combinazioni che non darebbero la stessa soluzione della guess allo step n-1
 (defrule no-equal-feedback
   (status (step ?s&:(> ?s 0)) (mode computer))
   (phase (number ?n&:(= ?n 3)))
@@ -140,6 +149,7 @@
   (retract ?checkcombos)
 )
 
+;termino la fase 3 e torno alla fase 0
 (defrule endph3
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 3)))
@@ -151,6 +161,8 @@
 ;  --------------
 ;  --- FASE 0 ---
 ;  --------------
+
+;allo step 0, userà sempre come tentativo la combinazione 'blue green red yellow'
  (defrule first-move
   (status (step 0) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 0)))
@@ -160,7 +172,7 @@
   (pop-focus)
  )
 
-
+;dallo step 1 in poi, estrae a caso un tentativo da 'combination' e la utilizza come tentativo
   (defrule another-move
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 0)))
@@ -173,6 +185,8 @@
 
  )
 
+
+;come fatto iniziale parto dalla fase numero 0
 (deffacts initial-facts
   (phase (number 0))
 )
