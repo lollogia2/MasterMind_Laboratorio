@@ -167,7 +167,7 @@
   (status (step 0) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 0)))
   =>
-  (assert (guess (step 1) (g blue green red yellow)))
+  (assert (guess (step 0) (g blue green red yellow)))
   (modify ?ph (number (+ ?n 1)))
   (pop-focus)
  )
