@@ -27,17 +27,6 @@
   (slot miss-placed (type INTEGER))
 )
 
-;  --------------
-;  -- UMANO -----
-;  --------------
-(defrule human-player
-  (status (step ?s) (mode human))
-  =>
-  (printout t "Your guess at step " ?s crlf)
-  (bind $?input (readline))
-  (assert (guess (step ?s) (g  (explode$ $?input)) ))
-  (pop-focus)
- )
 
 ;  --------------
 ;  --- FASE 1 ---
@@ -126,7 +115,7 @@
 )
 
 ;termino la fase 2 e passo alla 3
-(defrule endph2
+(defrule endph2 (declare (salience -10))
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 2)))
 =>
@@ -150,7 +139,7 @@
 )
 
 ;termino la fase 3 e torno alla fase 0
-(defrule endph3
+(defrule endph3 (declare (salience -10))
   (status (step ?s&:(> ?s 0)) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 3)))
 =>
