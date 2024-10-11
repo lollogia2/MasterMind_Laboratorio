@@ -167,6 +167,7 @@
   (status (step 0) (mode computer))
   ?ph<- (phase (number ?n&:(= ?n 0)))
   =>
+  (printout t "Step0(blue green red yellow)"  crlf)
   (assert (guess (step 0) (g blue green red yellow)))
   (modify ?ph (number (+ ?n 1)))
   (pop-focus)
@@ -178,6 +179,7 @@
   ?ph<- (phase (number ?n&:(= ?n 0)))
   ?combination <- (combination (code $?c))
   =>
+  (printout t "Step" ?s $?c crlf)
   (assert (guess (step ?s) (g $?c)))
   (retract ?combination)
   (modify ?ph (number (+ ?n 1)))
