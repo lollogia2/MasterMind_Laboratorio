@@ -17,3 +17,5 @@
 (bind ?value4  (nth$ (random 1 5) ?lista-colori))
 (printout t "Your guess at step " ?value1 ?value2 ?value3 ?value4 crlf)
 )
+
+code	(blue green purple white)
