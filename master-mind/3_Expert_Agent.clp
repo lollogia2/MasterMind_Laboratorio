@@ -173,7 +173,6 @@
   (retract ?combination)
   (modify ?ph (number (+ ?n 1)))
   (pop-focus)
-
  )
 
 
