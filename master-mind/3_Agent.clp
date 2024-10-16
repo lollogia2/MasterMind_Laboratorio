@@ -44,21 +44,14 @@
 ;controlliamo se abbiamo 4 feedback, giusti o semigiusti
 (defrule check-game-response-four-case1 (declare (salience 100))
  (status (step ?s&:(> ?s 0)) (mode computer))
- ?ph <- (phase (name three-to-four))
+ ?ph <- (phase (name ?phase&:(or (eq ?phase random-guessing) (eq ?phase three-to-four))))
  (answer (step ?s1&:(eq (- ?s 1) ?s1)) (right-placed ?rp) (miss-placed ?mp))
  (test (eq (+ ?rp ?mp) 4))
  =>
  (modify ?ph (name four-to-all-right))
 )
 
-(defrule check-game-response-four-case2 (declare (salience 100))
- (status (step ?s&:(> ?s 0)) (mode computer))
- ?ph <- (phase (name random-guessing))
- (answer (step ?s1&:(eq (- ?s 1) ?s1)) (right-placed ?rp) (miss-placed ?mp))
- (test (eq (+ ?rp ?mp) 4))
- =>
- (modify ?ph (name four-to-all-right))
-)
+
 
 ;  -------------------
 ;  --- FASE BEGIN ---
@@ -123,19 +116,22 @@
   (test (eq (+ ?rp ?mp) 3))
 =>
 
+  ;(bind ?candidates_values  (delete-member$ (create$ blue green red yellow orange white black purple) ?first ?second ?third ?fourth))
+  ;(bind ?random-candidate (nth$ (random 1 (length$ ?candidates_values)) ?candidates_values))
+  ;(bind ?candidates_values  (delete-member$ ?candidates_values ?random-candidate))
+
+  ;(bind ?mygues (create$ ?first ?second ?third ?random-candidate))
+  ;(assert (guess (step ?s) (g ?mygues)))
+
+  ;(assert (candidates (values ?candidates_values)))
+  ;(assert (state (right-candidate nil) (potential-candidate nil) (origin-step 1) (origin-value ?first ?second ?third ?fourth) (to-check 4)))
+  ;(modify ?ph (name three-to-four))
+  (printout t "random-guess-3rp-np trying to guess "  crlf)
   (bind ?candidates_values  (delete-member$ (create$ blue green red yellow orange white black purple) ?first ?second ?third ?fourth))
-  (bind ?random-candidate (nth$ (random 1 (length$ ?candidates_values)) ?candidates_values))
-  (bind ?candidates_values  (delete-member$ ?candidates_values ?random-candidate))
-
-  (bind ?mygues (create$ ?first ?second ?third ?random-candidate))
-  (assert (guess (step ?s) (g ?mygues)))
-
   (assert (candidates (values ?candidates_values)))
-  (assert (state (right-candidate nil) (potential-candidate nil) (origin-step 1) (origin-value ?first ?second ?third ?fourth) (to-check 4)))
+  (assert (state (right-candidate nil) (origin-step 0)  (potential-candidate nil)  (origin-value ?first ?second ?third ?fourth) (to-check 4)))
   (modify ?ph (name three-to-four))
-  (printout t "random-guess-3rp-np trying to guess " ?mygues crlf)
-
-  (pop-focus)
+  ;(pop-focus)
 )
 
 ; ----------------------------
@@ -181,6 +177,7 @@
 =>
 
   (bind ?right-color ?p-c)
+  ;(bind ?righ-color (nth$ ?check-index (create$ ?first ?second ?third ?fourth)))
 
   (modify ?state-var (right-candidate ?right-color) (to-check (- ?check-index 1)) (origin-value ?first ?second ?third ?fourth))
 
