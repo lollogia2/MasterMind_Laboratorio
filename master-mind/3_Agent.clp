@@ -231,6 +231,29 @@
 ;  --- DA 4 A CASO A 4 GIUSTE ----
 ;  -------------------------------
 
+;; Strutture dati necessarie: 
+;; 1.stato origine (da riutilizzare anche sopra per l'impostor): OCCHIO non è il stato 'prima', è l'ultimo stato in cui si è avuto un successo
+;; 2.lista azioni disponibili espresse ciascuna come coppia
+;; 3.multislot fisso di 4 per colori coretti
+
+
+;; Regole con salience alta che catturano i casi semplici da risolvere (DOPO)
+
+;; Algoritmo di risoluzione 
+
+;; 1) Regola che applica una nuova permutazione tra quelle disponibili
+;; PRIMA: A CASO
+;; DOPO: lo scambio da effettuare è compatibile con il multislot dei colori certi (effettuabile nelle precondizioni); da implementare anche regola
+;;       generica per catturare i colori sicuri
+;; 2) Regola che cattura un fallimento
+;; PRECOND: rosse prima maggiori di adesso
+;; CONSEGUENZE: non cambia origine, rimuove azione effettuata, passa a 1)
+;; 3) Regola che cattura un successo
+;; PRECOND: rosse prima minori di adesso
+;; CONSEGUENZE: cambia origine, rimuove azione effettuata, passa a 1)
+;; Regola che cattura il caso di uguaglianza (0-->0)
+
+
 
 
 (defrule four-to-all-right-permute
