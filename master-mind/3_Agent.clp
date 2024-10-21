@@ -6,11 +6,12 @@
 ;  --------------
 ;  -- TEMPLATE --
 ;  --------------
+; Agent phase
 (deftemplate phase
   (slot name (allowed-values begin random-guessing three-to-four four-to-all-right))
 )  
 
-
+; Colors that can be the missing fourth color in phase 3
 (deftemplate candidates 
   (multislot values (allowed-values blue green red yellow orange white black purple) (cardinality 0 4))
 )
@@ -69,6 +70,7 @@
 ;   RANDOM GUESS TILL 3+ CORRECT COLOR
 ;  -----------------------------------
 
+; The random color sequence have only two feedback, we need another random sequence
 (defrule random-guess-2rp-np
 
   ?ph <- (phase (name random-guessing))
@@ -93,6 +95,7 @@
   (pop-focus)
 )
 
+; The random color sequence have one or zero feedback, in this case we discard al the color and take the oposite
 (defrule random-guess-1or0rp-np
   ?ph <- (phase (name random-guessing))
   (status (step ?s&:(> ?s 0)) (mode computer))
@@ -106,8 +109,8 @@
   (modify ?ph (name random-guessing))
   (pop-focus)
 )
-;qua è possibile accorciare l'agente tramite random-guess-1or0rp-np per far partire direttamente from three to four ma sarebbe un po' confusso
 
+; The random color have three feedback. Now it's possible to pass to the next phase.
 (defrule random-guess-3rp-np
   ?ph <- (phase (name random-guessing))
   (status (step ?s&:(> ?s 0)) (mode computer))
@@ -116,29 +119,19 @@
   (test (eq (+ ?rp ?mp) 3))
 =>
 
-  ;(bind ?candidates_values  (delete-member$ (create$ blue green red yellow orange white black purple) ?first ?second ?third ?fourth))
-  ;(bind ?random-candidate (nth$ (random 1 (length$ ?candidates_values)) ?candidates_values))
-  ;(bind ?candidates_values  (delete-member$ ?candidates_values ?random-candidate))
-
-  ;(bind ?mygues (create$ ?first ?second ?third ?random-candidate))
-  ;(assert (guess (step ?s) (g ?mygues)))
-
-  ;(assert (candidates (values ?candidates_values)))
-  ;(assert (state (right-candidate nil) (potential-candidate nil) (origin-step 1) (origin-value ?first ?second ?third ?fourth) (to-check 4)))
-  ;(modify ?ph (name three-to-four))
   (printout t "random-guess-3rp-np trying to guess "  crlf)
   (bind ?candidates_values  (delete-member$ (create$ blue green red yellow orange white black purple) ?first ?second ?third ?fourth))
   (assert (candidates (values ?candidates_values)))
   (assert (state (right-candidate nil) (origin-step 0)  (potential-candidate nil)  (origin-value ?first ?second ?third ?fourth) (to-check 4)))
   (modify ?ph (name three-to-four))
-  ;(pop-focus)
 )
 
 ; ----------------------------
 ;  FROM THREE TO FOUR MP + RP
 ; ----------------------------
-; right-candidate: serve per individuare quale dei quattro è sbagliato
-; regola nel caso in cui passiamo a 2 mp + rp E la fase precedente è l'origine
+
+; In the case where the guess have three feedbacks, it's necessary to change the color of position to-check till give 4 feedbacks 
+; or potentialy 2 feedback (in that case the colors checked before are all right colors)
 (defrule three-to-four-2rp-mp-eliminate 
   ?ph <- (phase (name three-to-four))
   (status (step ?s&:(> ?s 0)) (mode computer))
@@ -161,7 +154,7 @@
   (pop-focus)
 )
 
-; regola nel caso in caso passiamo a 2 mp + rp E la fase precedente non è l'origine
+; If the previous guess give only 2 feedbacks instead of 3 AND the previous state is the origin: the changed color is wrong and orign color is right
 (defrule three-to-four-2rp-mp-findimpostor
   ?ph <- (phase (name three-to-four))
   (status (step ?s&:(> ?s 0)) (mode computer))
@@ -169,16 +162,12 @@
   ?state-var <- (state (right-candidate ?r-c&:(eq ?r-c nil)) (potential-candidate ?p-c) (origin-step ?o-s) (origin-value ?first ?second ?third ?fourth) (to-check ?check-index))
   ?candidates <- (candidates (values $?candidates_values))
 
-  ;(guess (step ?s2&:(eq (- ?s 2) ?s2)) (g ?first ?second ?third ?fourth))
-
   ; step -2 is origin?
   (test (> ?o-s 1))
   (test (eq (+ ?rp ?mp) 2))
 =>
 
   (bind ?right-color ?p-c)
-  ;(bind ?righ-color (nth$ ?check-index (create$ ?first ?second ?third ?fourth)))
-
   (modify ?state-var (right-candidate ?right-color) (to-check (- ?check-index 1)) (origin-value ?first ?second ?third ?fourth))
 
   (printout t "three-to-four-2rp-mp-findimpostor the missing color is " ?right-color crlf)
@@ -187,7 +176,8 @@
   (modify ?ph (name three-to-four))
 )
 
-
+; If the previous guess give only 2 feedbacks instead of 3 AND the previous state is not the origin: 
+; there are two color both right, the origin color and the color before the two feedback (the right candidate)
 (defrule three-to-four-find-impostor
   ?ph <- (phase (name three-to-four))
   (status (step ?s&:(> ?s 0)) (mode computer))
@@ -204,11 +194,11 @@
 
 
 
-; regola in cui restiamo 3 mp + rp 
+; Once the right candidate is well known, it's time to find which color of the remaining position to-check is the impostor
 (defrule three-to-four-3rp-mp
-  ?ph <- (phase (name three-to-four)) ;ok
-  (status (step ?s&:(> ?s 0)) (mode computer)) ;ok
-  (answer (step ?s1&:(eq (- ?s 1) ?s1)) (right-placed ?rp) (miss-placed ?mp)) ;ok
+  ?ph <- (phase (name three-to-four))
+  (status (step ?s&:(> ?s 0)) (mode computer)) 
+  (answer (step ?s1&:(eq (- ?s 1) ?s1)) (right-placed ?rp) (miss-placed ?mp))
   (guess (step ?s2&:(eq (- ?s 1) ?s2)) (g $?guesses)) 
   ?state <- (state (right-candidate ?r-c&:(eq ?r-c nil)) (origin-step ?o-s) (origin-value ?first ?second ?third ?fourth) (to-check ?check-index))
   ?candidates <- (candidates (values $?candidates_values))
@@ -231,35 +221,10 @@
 ;  --- DA 4 A CASO A 4 GIUSTE ----
 ;  -------------------------------
 
-;; Strutture dati necessarie: 
-;; 1.stato origine (da riutilizzare anche sopra per l'impostor): OCCHIO non è il stato 'prima', è l'ultimo stato in cui si è avuto un successo
-;; 2.lista azioni disponibili espresse ciascuna come coppia
-;; 3.multislot fisso di 4 per colori coretti
-
-
-;; Regole con salience alta che catturano i casi semplici da risolvere (DOPO)
-
-;; Algoritmo di risoluzione 
-
-;; 1) Regola che applica una nuova permutazione tra quelle disponibili
-;; PRIMA: A CASO
-;; DOPO: lo scambio da effettuare è compatibile con il multislot dei colori certi (effettuabile nelle precondizioni); da implementare anche regola
-;;       generica per catturare i colori sicuri
-;; 2) Regola che cattura un fallimento
-;; PRECOND: rosse prima maggiori di adesso
-;; CONSEGUENZE: non cambia origine, rimuove azione effettuata, passa a 1)
-;; 3) Regola che cattura un successo
-;; PRECOND: rosse prima minori di adesso
-;; CONSEGUENZE: cambia origine, rimuove azione effettuata, passa a 1)
-;; Regola che cattura il caso di uguaglianza (0-->0)
-
-
-
 
 (defrule four-to-all-right-permute
   ?ph <- (phase (name four-to-all-right))
   (status (step ?s&:(> ?s 0)) (mode computer))
-  ;(answer (step ?s1&:(eq (- ?s 1) ?s1)) (right-placed ?rp) (miss-placed ?mp))
   (guess (step ?s1&:(eq (- ?s 1) ?s1)) (g ?first ?second ?third ?fourth))
 =>
   (bind ?lista-colori (create$ ?first ?second ?third ?fourth))
